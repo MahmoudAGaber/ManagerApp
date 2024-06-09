@@ -45,6 +45,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Todo Manager'),
+        automaticallyImplyLeading: false,
+
       ),
       body: todoProvider.loading
           ? Center(child: CircularProgressIndicator())
@@ -106,6 +108,7 @@ class _TodoDetailScreenState extends State<TodoDetailScreen> {
   LocalTodoDataSource localTodoDataSource = LocalTodoDataSource();
   bool _completed = false;
   UserModel? userModel;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -129,49 +132,59 @@ class _TodoDetailScreenState extends State<TodoDetailScreen> {
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: InputDecoration(labelText: 'todo Title'),
-            ),
-            CheckboxListTile(
-              title: Text('Completed'),
-              value: _completed,
-              onChanged: (value) {
-                setState(() {
-                  _completed = value!;
-                });
-              },
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                if (widget.todo == null) {
-                  final todo = TodoModel(
-                    id: DateTime.now().millisecondsSinceEpoch,
-                    todo: _titleController.text,
-                    completed: _completed,
-                    userId: userModel!.id,
-                  );
-                  print("Add");
-                  todoProvider.addTodo(todo);
-                } else {
-                  final todo = TodoModel(
-                    id:widget.todo!.id,
-                    todo: _titleController.text,
-                    completed: _completed,
-                    userId: userModel!.id,
-                  );
-                  print("Edit${todo.id}");
-                  todoProvider.updateTodo(todo);
-                }
-
-                Navigator.pop(context);
-              },
-              child: Text(widget.todo == null ? 'Add Task' : 'Update Task'),
-            ),
-          ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _titleController,
+                decoration: InputDecoration(labelText: 'Todo Title'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a todo title';
+                  }
+                  return null;
+                },
+              ),
+              CheckboxListTile(
+                title: Text('Completed'),
+                value: _completed,
+                onChanged: (value) {
+                  setState(() {
+                    _completed = value!;
+                  });
+                },
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) { // Check if form is valid
+                      if (widget.todo == null) {
+                        final todo = TodoModel(
+                          id: DateTime.now().millisecondsSinceEpoch,
+                          todo: _titleController.text,
+                          completed: _completed,
+                          userId: userModel!.id,
+                        );
+                        print("Add");
+                        todoProvider.addTodo(todo);
+                      } else {
+                        final todo = TodoModel(
+                          id: widget.todo!.id,
+                          todo: _titleController.text,
+                          completed: _completed,
+                          userId: userModel!.id,
+                        );
+                        print("Edit${todo.id}");
+                        todoProvider.updateTodo(todo);
+                      }
+                      Navigator.pop(context);
+                    }
+                  },
+                child: Text(widget.todo == null ? 'Add Task' : 'Update Task'),
+              ),
+            ],
+          ),
         ),
       ),
     );

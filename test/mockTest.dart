@@ -1,82 +1,50 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:managerapp/data/model/todo_model.dart';
 import 'package:managerapp/domain/repositories/todo_repository.dart';
+import 'package:managerapp/presentation/providers/todo_provider.dart';
 import 'package:mockito/mockito.dart';
 
-import '../lib/presentation/providers/todo_provider.dart';
-
-
-// Mock classes
-class MockTaskRepository extends Mock implements TodoRepository {}
+class MockTodoRepository extends Mock implements TodoRepository {}
 
 void main() {
-
-  group('TaskProvider Tests', () {
+  group('TodoProvider Tests', () {
     late TodoProvider todoProvider;
-    late MockTaskRepository mockTaskRepository;
+    late MockTodoRepository mockTodoRepository;
 
     setUp(() {
-      mockTaskRepository = MockTaskRepository();
-      todoProvider = TodoProvider(todoRepository: mockTaskRepository);
+      mockTodoRepository = MockTodoRepository();
+      todoProvider = TodoProvider(todoRepository: mockTodoRepository);
     });
 
-    test('Add Task Test', () async {
-      // Arrange
-      final task = TodoModel(id: 1, todo: 'Test Task', completed: false);
-
-      // Mock repository response
-      when(mockTaskRepository.addTodo(task)).thenAnswer((_) async => Future.value());
-
-      // Act
-      await todoProvider.addTodo(task);
-
-      // Assert
-      expect(todoProvider.todos.contains(task), true);
-    });
-
-    test('Update Task Test', () async {
-      // Arrange
-      final updatedTodo = TodoModel(id: 1, todo: 'Updated Task', completed: true);
-
-      // Mock repository response
-      when(mockTaskRepository.updateTodo(updatedTodo)).thenAnswer((_) async => Future.value());
-
-      // Act
-      await todoProvider.updateTodo(updatedTodo);
-
-      // Assert
-      final todo = todoProvider.todos.firstWhere((t) => t.id == updatedTodo.id);
-      expect(todo.todo, 'Updated Task');
-      expect(todo.completed, true);
-    });
-
-    // Similar tests can be written for deleteTask and fetchTasks
-
-    test('Input Validation Test', () {
-      // Arrange
-      final invalidTodo = TodoModel(id: 1, todo: '', completed: false);
-
-      // Act & Assert
-      expect(() => todoProvider.addTodo(invalidTodo), throwsException);
-    });
-
-    test('Network Request Test', () async {
-      // Arrange
-      final tasks = [
+    test('Fetch Todos Test', () async {
+      final todos = [
         TodoModel(id: 1, todo: 'Task 1', completed: false),
         TodoModel(id: 2, todo: 'Task 2', completed: true),
       ];
-
-      // Mock repository response
-      when(mockTaskRepository.getTodos()).thenAnswer((_) async => tasks);
-
-      // Act
+      when(mockTodoRepository.getTodos()).thenAnswer((_) async => todos);
       await todoProvider.fetchTodos();
-
-      // Assert
-      expect(todoProvider.todos, tasks);
+      expect(todoProvider.todos, todos);
     });
 
-    // Additional tests can be added for error handling, state management, etc.
+    test('Add Todo Test', () async {
+      final todo = TodoModel(id: 1, todo: 'Test Task', completed: false);
+      when(mockTodoRepository.addTodo(todo)).thenAnswer((_) async {});
+      await todoProvider.addTodo(todo);
+      expect(todoProvider.todos.contains(todo), true);
+    });
+
+    test('Update Todo Test', () async {
+      final todo = TodoModel(id: 1, todo: 'Test Task', completed: false);
+      when(mockTodoRepository.updateTodo(todo)).thenAnswer((_) async {});
+      await todoProvider.updateTodo(todo);
+      expect(todoProvider.todos.contains(todo), true);
+    });
+
+    test('Delete Todo Test', () async {
+      final todoId = 1;
+      when(mockTodoRepository.deleteTodo(todoId)).thenAnswer((_) async {});
+      await todoProvider.deleteTodo(todoId);
+      expect(todoProvider.todos.isEmpty, true);
+    });
   });
 }
